@@ -1,0 +1,31 @@
+baseURL = "https://www.jy-blog.com/"
+languageCode = "en-us"
+title = "John You's Blog"
+theme = "kaslaanka"
+
+# Optional but common
+enableRobotsTXT = true
+
+[params]
+# Kaslaanka theme expects these
+sitename = "John You's Blog"
+copyrights = "John You"
+projectsURL = "https://github.com/johnswyou"
+brief_about = "<center>Hey — this is my blog.</center>"
+
+# We’ll use this to conditionally load KaTeX.
+# You can also enable per-post with front matter: math = true
+math = true
+
+[markup]
+  [markup.goldmark]
+    [markup.goldmark.renderer]
+      # Allows HTML in markdown (Kaslaanka README uses this)
+      unsafe = true
+
+  [markup.highlight]
+    codeFences = true
+    guessSyntax = true
+    lineNos = false
+    noClasses = true
+    style = "github-dark"

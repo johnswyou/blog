@@ -1,0 +1,210 @@
+<!doctype html>
+<html lang="en-us">
+
+  <head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title> Hugo authoring Q&amp;A: add, remove, rename posts - John You&#39;s Blog </title>
+    <meta name="HandheldFriendly" content="True">
+    <meta name="MobileOptimized" content="320">
+    <meta name="referrer" content="no-referrer">
+    <meta property="og:site_name" content="John You&#39;s Blog">
+    <meta property="og:locale" content="en_US">
+
+    <meta property="og:url" content="http://localhost:1313/blog/authoring-qa/">
+  <meta property="og:site_name" content="John You&#39;s Blog">
+  <meta property="og:title" content="Hugo authoring Q&A: add, remove, rename posts">
+  <meta property="og:description" content="Q: Where do Kaslaanka blog posts live Kaslaanka expects a blog section at content/blog/.
+Q: What is the recommended structure for a new post Use a leaf bundle so your post and its images live together:
+content/blog/my-post/index.md content/blog/my-post/diagram.svg Then reference images with a relative path:
+![Alt](diagram.svg) Q: What is the simplest structure if I have no local images Create a single Markdown file:
+content/blog/my-post.md Q: What front matter should I include Minimum TOML front matter keys:">
+  <meta property="og:locale" content="en_us">
+  <meta property="og:type" content="article">
+    <meta property="article:section" content="blog">
+    <meta property="article:published_time" content="2026-01-01T00:00:00+00:00">
+    <meta property="article:modified_time" content="2026-01-01T00:00:00+00:00">
+
+
+    <meta name="twitter:card" content="summary_large_image">
+    
+    <meta name="twitter:title" content="Hugo authoring Q&amp;A: add, remove, rename posts">
+    <meta name="twitter:description" content="">
+    
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.10/dist/katex.min.css">
+
+
+    <meta name="twitter:image" content="http://localhost:1313/">
+    <link rel="canonical" href="http://localhost:1313/blog/authoring-qa/">
+    
+    <link rel="stylesheet" href="/css/site.min.css">
+    <link rel="stylesheet" href="http://localhost:1313/css/custom.css">
+
+    </head>
+
+  <body>
+    
+<div class="mt-xl header">
+  <header>
+    <div class="container">
+      <div class="row justify-content-center">
+	<div class="col-auto">
+	  <a href="http://localhost:1313/" style="display: contents">
+	    <h1 class="name text-center">John You&#39;s Blog</h1>
+	  </a>
+	</div>
+      </div>
+      <div class="row justify-content-center">
+	<div class="nav justify-content-center">
+	  <ul>
+	    
+	    
+	  </ul>
+	</div>
+      </div>
+    </div>
+  </header>
+</div>
+
+<div class="content">
+  <div class="container">
+    <div class="row justify-content-center">
+      <div class="col-sm-12 col-lg-8">
+	<h1 class="mx-0 mx-md-4 blog-post-title">Hugo authoring Q&amp;A: add, remove, rename posts</h1>
+	<div class="meta-data meta">
+	  
+	  
+	  
+	  
+	  <span class="date middot meta-data" title='Thu Jan 1 2026 00:00:00 UTC'>
+	    2026-01-01
+	  </span>
+	  <span class="reading-time middot meta-data">
+	    2 min read
+	  </span>
+	  
+	  
+	  <a class="middot meta-data" href="http://localhost:1313/blog/authoring-qa/">Permalink</a>
+	  <div class="d-none d-md-inline tags">
+	    <ul class="list-unstyled d-inline">
+	      
+	    </ul>
+	  </div>
+	</div>
+	<div class="markdown blog-post-content">
+	  <h2 id="q-where-do-kaslaanka-blog-posts-live">Q: Where do Kaslaanka blog posts live</h2>
+<p>Kaslaanka expects a blog section at <code>content/blog/</code>.</p>
+<h2 id="q-what-is-the-recommended-structure-for-a-new-post">Q: What is the recommended structure for a new post</h2>
+<p>Use a <strong>leaf bundle</strong> so your post and its images live together:</p>
+<ul>
+<li><code>content/blog/my-post/index.md</code></li>
+<li><code>content/blog/my-post/diagram.svg</code></li>
+</ul>
+<p>Then reference images with a relative path:</p>
+<ul>
+<li><code>![Alt](diagram.svg)</code></li>
+</ul>
+<h2 id="q-what-is-the-simplest-structure-if-i-have-no-local-images">Q: What is the simplest structure if I have no local images</h2>
+<p>Create a single Markdown file:</p>
+<ul>
+<li><code>content/blog/my-post.md</code></li>
+</ul>
+<h2 id="q-what-front-matter-should-i-include">Q: What front matter should I include</h2>
+<p>Minimum TOML front matter keys:</p>
+<ul>
+<li><code>title</code></li>
+<li><code>date</code></li>
+<li><code>draft</code></li>
+</ul>
+<p>Optional organization:</p>
+<ul>
+<li><code>tags = [&quot;x&quot;]</code></li>
+<li><code>categories = [&quot;y&quot;]</code></li>
+</ul>
+<h2 id="q-how-do-i-enable-math-rendering-on-a-post">Q: How do I enable math rendering on a post</h2>
+<ul>
+<li>If your site config has <code>params.math = true</code> in <code>hugo.toml</code>, KaTeX loads site-wide.</li>
+<li>If you disable site-wide math later, enable it per-post by adding <code>math = true</code> to the post front matter.</li>
+</ul>
+<h2 id="q-is-there-a-convenient-command-to-create-a-new-post">Q: Is there a convenient command to create a new post</h2>
+<p>Yes:</p>
+<div class="highlight"><pre tabindex="0" style="color:#e6edf3;background-color:#0d1117;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>hugo new blog/my-post/index.md
+</span></span><span style="display:flex;"><span><span style="color:#8b949e;font-style:italic"># or</span>
+</span></span><span style="display:flex;"><span>hugo new blog/my-post.md
+</span></span></code></pre></div><h2 id="q-how-do-i-remove-an-existing-post">Q: How do I remove an existing post</h2>
+<p>Hard remove:</p>
+<ul>
+<li>Leaf bundle: delete <code>content/blog/my-post/</code></li>
+<li>Single file: delete <code>content/blog/my-post.md</code></li>
+</ul>
+<p>Soft remove (keep the file, hide the post):</p>
+<ul>
+<li>Set <code>draft = true</code> in the post front matter</li>
+<li>It won’t show up unless you build with drafts enabled (e.g. <code>hugo server -D</code>)</li>
+</ul>
+<p>Deployment note:</p>
+<ul>
+<li>Make sure your deploy step <strong>cleans old output</strong> so deleted posts don’t linger as stale HTML.</li>
+</ul>
+<h2 id="q-what-happens-if-i-rename-a-leaf-bundle-directory">Q: What happens if I rename a leaf bundle directory</h2>
+<p>Renaming a directory like:</p>
+<ul>
+<li><code>content/blog/demo/</code> to <code>content/blog/demo_alt/</code></li>
+</ul>
+<p>will typically change the URL from:</p>
+<ul>
+<li><code>/blog/demo/</code> to <code>/blog/demo_alt/</code></li>
+</ul>
+<p>unless you override it with front matter such as <code>slug</code> or <code>url</code> or custom permalinks.</p>
+<h2 id="q-what-can-renaming-break">Q: What can renaming break</h2>
+<ul>
+<li>Inbound links and bookmarks to the old URL</li>
+<li>Internal links that point to the old path, including <code>ref</code> and <code>relref</code> usage</li>
+</ul>
+<h2 id="q-what-usually-does-not-break-when-renaming">Q: What usually does not break when renaming</h2>
+<ul>
+<li>Page-bundle images referenced relatively like <code>![Alt](local-image.svg)</code></li>
+<li>Static assets referenced with absolute paths like <code>![Alt](/images/something.svg)</code></li>
+</ul>
+<h2 id="q-how-do-i-keep-the-old-url-working-after-a-rename">Q: How do I keep the old URL working after a rename</h2>
+<p>Add an alias in the post front matter:</p>
+<ul>
+<li><code>aliases = [&quot;/blog/demo/&quot;]</code></li>
+</ul>
+<p>This will generate a page at the old location that redirects to the new one. Also ensure your deploy cleans old output so you don’t accidentally serve stale files.</p>
+
+
+	</div>
+	
+      </div>
+      <hr class="footer-linebreak">
+<div class="container">
+  <span class="row justify-content-center meta" id="footer">
+    Copyright © 2026 John You
+  </span>
+  <script defer src="http://localhost:1313/js/custom.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.10/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.10/dist/contrib/auto-render.min.js"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      renderMathInElement(document.body, {
+        delimiters: [
+          { left: "$$", right: "$$", display: true },
+          { left: "$", right: "$", display: false }
+        ],
+        ignoredTags: ["script", "noscript", "style", "textarea", "pre", "code"],
+        throwOnError: false
+      });
+    });
+  </script>
+
+
+</div>
+
+    </div>
+  </div>
+</div>
+
+  </body>
+
+</html>
