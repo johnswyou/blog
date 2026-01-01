@@ -6,6 +6,17 @@
     <link>http://localhost:1313/</link>
     <description>Recent content on John You&#39;s Blog</description>
     
-    <language>en-us</language><atom:link href="http://localhost:1313/index.xml" rel="self" type="application/rss+xml" />
+    <language>en-us</language>
+    <lastBuildDate>Thu, 01 Jan 2026 18:15:35 -0500</lastBuildDate><atom:link href="http://localhost:1313/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>My intentions for this blog</title>
+      <link>http://localhost:1313/blog/1-blog-intent/</link><pubDate>Thu, 01 Jan 2026 18:15:35 -0500</pubDate>
+      
+      <guid>http://localhost:1313/blog/1-blog-intent/</guid>
+      <description>&lt;p&gt;Hey,&lt;/p&gt;
+&lt;p&gt;I like to learn, explore, and think about many different topics such as statistics, machine learning, complex systems, economics, finance, history, etc. A mental jack of all trades but master of none, of sorts.&lt;/p&gt;
+&lt;p&gt;I wanted to create this website to serve as an &amp;ldquo;export&amp;rdquo; of my brain, at least regarding knowledge that I think are interesting enough to write about and share with folks (like yourself) on the internet.&lt;/p&gt;</description>
+    </item>
+    
   </channel>
 </rss>
