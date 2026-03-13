@@ -1,5 +1,6 @@
 +++
 date = '2026-03-12T23:33:33-04:00'
+lastmod = '2026-03-13T00:16:00-04:00'
 draft = false
 title = 'Power-based sample sizing for two common e-commerce KPIs'
 categories = ['A/B testing']
@@ -298,7 +299,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import scipy.stats as stats
 
-# A/B Test Parameters (based on previous Evan Miller example)
+# A/B Test Parameters
 p1 = 0.20
 p2 = 0.25
 n = 1030
