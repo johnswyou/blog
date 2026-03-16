@@ -1,6 +1,6 @@
 +++
 date = '2026-03-12T23:33:33-04:00'
-lastmod = '2026-03-16T11:50:00-04:00'
+lastmod = '2026-03-16T18:14:00-04:00'
 draft = false
 title = 'Power-based sample sizing for two common e-commerce KPIs'
 categories = ['A/B testing']
@@ -310,7 +310,7 @@ import scipy.stats as stats
 
 # A/B Test Parameters
 p1 = 0.20
-p2 = 0.25
+p2 = 0.257
 n = 1030
 delta = p2 - p1
 
@@ -324,7 +324,7 @@ z_alpha = stats.norm.ppf(1 - alpha / 2)
 d_star = z_alpha * se0
 
 # X-axis range for plotting
-x = np.linspace(-0.04, 0.12, 1000)
+x = np.linspace(-0.06, 0.12, 1000)
 
 # Y-axis values for both distributions
 y0 = stats.norm.pdf(x, 0, se0)
@@ -335,50 +335,59 @@ fig, ax = plt.subplots(figsize=(12, 7))
 
 # Plot H0 Distribution
 ax.plot(x, y0, label=r'$H_0$: Null Distribution (No Effect)', color='#1f77b4', lw=2.5)
+# Note: Shading both tails for the false positive rate
 ax.fill_between(x, y0, where=(x >= d_star), color='#1f77b4', alpha=0.5, label=r'$\alpha / 2$ (False Positive Rate)')
+ax.fill_between(x, y0, where=(x <= -d_star), color='#1f77b4', alpha=0.5)
 
 # Plot H1 Distribution
 ax.plot(x, y1, label=r'$H_1$: Alternative Distribution (True Effect = $\delta$)', color='#2ca02c', lw=2.5)
-ax.fill_between(x, y1, where=(x <= d_star), color='#d62728', alpha=0.5, label=r'$\beta$ (False Negative Rate)')
+
+# FIX: Bounding the False Negative region between -d_star and d_star for a two-tailed test
+ax.fill_between(x, y1, where=((x >= -d_star) & (x <= d_star)), color='#d62728', alpha=0.5, label=r'$\beta$ (False Negative Rate)')
 ax.fill_between(x, y1, where=(x > d_star), color='#2ca02c', alpha=0.3, label=r'Power ($1-\beta$)')
 
-# The "Line in the Sand"
-ax.axvline(d_star, color='black', linestyle='--', lw=2.5, label=r'$d^*$ (Critical Threshold)')
+# The "Lines in the Sand"
+ax.vlines(d_star, ymin=0, ymax=24, color='black', linestyle='--', lw=2.5, label=r'$d^*$ (Upper Critical Threshold)')
+ax.vlines(-d_star, ymin=0, ymax=24, color='black', linestyle='--', lw=1.5, alpha=0.5, label=r'$-d^*$ (Lower Critical Threshold)')
 
 # Center lines for reference
-ax.axvline(0, color='gray', linestyle=':', lw=1.5)
-ax.axvline(delta, color='gray', linestyle=':', lw=1.5)
+ax.vlines(0, ymin=0, ymax=24, color='gray', linestyle=':', lw=1.5)
+ax.vlines(delta, ymin=0, ymax=24, color='gray', linestyle=':', lw=1.5)
 
-# Increase the maximum y-limit so the legend has room to breathe above the curves
-ax.set_ylim(0, max(max(y0), max(y1)) * 1.35)
+# Leave a bit of headroom above the peaks for the annotations.
+ax.set_ylim(0, max(max(y0), max(y1)) * 1.2)
 
 # Annotations
 ax.annotate(r'Center = $0$', xy=(0, max(y0)*0.95), xytext=(-0.025, max(y0)*0.95),
             arrowprops=dict(facecolor='black', arrowstyle='->'), fontsize=11)
 
-ax.annotate(r'Center = $\delta$ (0.05)', xy=(delta, max(y1)*0.95), xytext=(delta + 0.015, max(y1)*0.95),
+ax.annotate(rf'Center = $\delta$ ({delta:.3f})', xy=(delta, max(y1)*0.95), xytext=(delta + 0.015, max(y1)*0.95),
             arrowprops=dict(facecolor='black', arrowstyle='->'), fontsize=11)
 
 ax.annotate(r'The Line in the Sand ($d^*$)', xy=(d_star, max(y0)*0.6), xytext=(d_star + 0.015, max(y0)*0.65),
             arrowprops=dict(facecolor='black', arrowstyle='->', lw=1.5), fontsize=13, fontweight='bold')
 
 # Formatting
-ax.set_title(r'The Line in the Sand ($d^*$): Balancing False Positives ($\alpha$) and Statistical Power ($1-\beta$)', fontsize=15, pad=15)
+ax.set_title(
+    r'The Line in the Sand ($d^*$): Balancing False Positives ($\alpha$) and Statistical Power ($1-\beta$)',
+    fontsize=15,
+    y=1.16,
+)
 ax.set_xlabel(r'Observed Difference in Conversion Rate ($\hat{d}$)', fontsize=13)
 ax.set_ylabel(r'Probability Density', fontsize=13)
 
-# Place legend in upper right but now with plenty of space above the curves
-ax.legend(loc='upper right', fontsize=11)
+# Keep the legend above the plot area, below the raised title.
+ax.legend(loc='upper center', bbox_to_anchor=(0.5, 1.12), ncol=2, fontsize=11, frameon=False)
 
-ax.grid(True, alpha=0.2)
-ax.set_xlim(-0.04, 0.11)
+# ax.grid(True, alpha=0.2)
+ax.set_xlim(-0.06, 0.11)
 
 # Removing top and right spines
 ax.spines['top'].set_visible(False)
 ax.spines['right'].set_visible(False)
 
-plt.tight_layout()
-plt.savefig('line_in_the_sand_fixed.png', dpi=300)
+plt.tight_layout(rect=(0, 0, 1, 0.97))
+plt.savefig('line_in_the_sand.png', dpi=300)
 ```
 
 ## References
