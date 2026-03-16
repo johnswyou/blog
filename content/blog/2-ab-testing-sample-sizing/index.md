@@ -1,6 +1,6 @@
 +++
 date = '2026-03-12T23:33:33-04:00'
-lastmod = '2026-03-13T00:16:00-04:00'
+lastmod = '2026-03-16T11:50:00-04:00'
 draft = false
 title = 'Power-based sample sizing for two common e-commerce KPIs'
 categories = ['A/B testing']
@@ -228,6 +228,10 @@ def calculate_cr_sample_size(p1, mde, alpha=0.05, power=0.80):
     """Calculates sample size for a binomial proportion test."""
     p2 = p1 + mde
     
+    # Bounds checking to ensure probabilities remain mathematically valid
+    if p2 > 1.0 or p2 < 0.0:
+        raise ValueError("The true conversion rate of the variant (baseline + mde) must be between 0.0 and 1.0.")
+    
     z_alpha = stats.norm.ppf(1 - alpha / 2)
     z_beta = stats.norm.ppf(power)
     
@@ -256,32 +260,37 @@ def estimate_rps_variance(p, aov):
 def main():
     parser = argparse.ArgumentParser(description="A/B Test Sample Size Calculator")
     parser.add_argument("--type", choices=["cr", "rps"], required=True, help="Type of test: 'cr' (Conversion Rate) or 'rps' (Revenue Per Session)")
-    parser.add_argument("--baseline", type=float, required=True, help="Baseline CR (e.g., 0.20) or Baseline RPS (e.g., 5.00)")
+    parser.add_argument("--baseline", type=float, help="Baseline Conversion Rate (required for 'cr' test, or for 'rps' when estimating variance with --aov)")
     parser.add_argument("--mde", type=float, required=True, help="Absolute Minimum Detectable Effect")
     parser.add_argument("--alpha", type=float, default=0.05, help="Significance level (default: 0.05)")
     parser.add_argument("--power", type=float, default=0.80, help="Statistical power (default: 0.80)")
     
-    # Optional arguments for RPS estimation
-    parser.add_argument("--cr", type=float, help="Baseline Conversion Rate (required if estimating RPS variance)")
+    # Arguments for RPS estimation
     parser.add_argument("--aov", type=float, help="Average Order Value (required if estimating RPS variance)")
-    parser.add_argument("--variance", type=float, help="Known RPS variance (overrides --cr and --aov estimation)")
+    parser.add_argument("--variance", type=float, help="Known RPS variance (overrides --aov estimation)")
 
     args = parser.parse_args()
 
     if args.type == "cr":
-        n = calculate_cr_sample_size(args.baseline, args.mde, args.alpha, args.power)
-        print(f"\n[Conversion Rate Test]")
-        print(f"Required Sample Size: {n:,} per variation\n")
+        if args.baseline is None:
+            parser.error("--baseline is required when --type is 'cr'")
+            
+        try:
+            n = calculate_cr_sample_size(args.baseline, args.mde, args.alpha, args.power)
+            print(f"\n[Conversion Rate Test]")
+            print(f"Required Sample Size: {n:,} per variation\n")
+        except ValueError as e:
+            print(f"\nError: {e}\n")
 
     elif args.type == "rps":
         if args.variance:
             var = args.variance
             print(f"\n[RPS Test - Using Provided Variance: {var:.4f}]")
-        elif args.cr and args.aov:
-            var = estimate_rps_variance(args.cr, args.aov)
+        elif args.baseline is not None and args.aov is not None:
+            var = estimate_rps_variance(args.baseline, args.aov)
             print(f"\n[RPS Test - Using Estimated Variance (CV=1): {var:.4f}]")
         else:
-            print("Error: For an RPS test, you must provide either --variance OR both --cr and --aov.")
+            print("\nError: For an RPS test, you must provide either --variance OR both --baseline (as Conversion Rate) and --aov.\n")
             return
 
         n = calculate_rps_sample_size(var, args.mde, args.alpha, args.power)
