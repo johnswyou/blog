@@ -387,7 +387,7 @@ ax.spines['top'].set_visible(False)
 ax.spines['right'].set_visible(False)
 
 plt.tight_layout(rect=(0, 0, 1, 0.97))
-plt.savefig('line_in_the_sand.png', dpi=300)
+plt.savefig('the_line_in_the_sand.png', dpi=300)
 ```
 
 ## References
