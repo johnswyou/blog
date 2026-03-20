@@ -2,6 +2,7 @@
 date = '2026-03-20T14:16:27-04:00'
 draft = false
 title = 'How I think about statistical power'
+categories = ['statistics']
 +++
 
 Suppose you are designing a clinical trial to test whether a new drug lowers systolic blood pressure. Your null hypothesis is that the drug has no effect: $H_0$: $\mu = 0$, where $\mu$ is the true mean reduction in blood pressure. You plan to collect data, compute a test statistic, and reject the null if the evidence is strong enough.
@@ -81,7 +82,11 @@ We know that $H_0$ is false, so rejecting $H_0$ would be the correct decision. B
 
 The sampling distribution of the test statistic is fully specified. It is centered at $\frac{\delta}{\sigma/\sqrt{n}}$. *Now* we can compute $P(\text{reject } H_0) = 1 - \beta$. **This is power.** A rejection in this reality is a correct decision (true positive). A failure to reject is a Type II error (false negative).
 
-$$\begin{array}{lclcl} \text{Reality 1 } (H_0 \text{ true}) & \longrightarrow & P(\text{reject}) = \alpha & \longleftarrow & \text{computable} \\ \text{Reality 2 } (H_1 \text{ true}) & \longrightarrow & P(\text{reject}) = \text{???} & \longleftarrow & \text{NOT computable} \\ \text{Reality 3 } (H_p \text{ true}) & \longrightarrow & P(\text{reject}) = 1 - \beta = \text{power} & \longleftarrow & \text{computable} \end{array}$$
+$$\text{Reality 1 } (H_0 \text{ true}) \longrightarrow P(\text{reject}) = \alpha \longleftarrow \text{computable}$$
+
+$$\text{Reality 2 } (H_1 \text{ true}) \longrightarrow P(\text{reject}) = \text{???} \longleftarrow \text{NOT computable}$$
+
+$$\text{Reality 3 } (H_p \text{ true}) \longrightarrow P(\text{reject}) = 1 - \beta = \text{power} \longleftarrow \text{computable}$$
 
 **Power lives in Reality 3, not Reality 2.** You cannot talk about power without specifying $H_P$. The composite alternative $H_1$ tells you the *direction* of the effect (or simply that it is non-zero), but not its *magnitude*. Magnitude is what you need.
 
