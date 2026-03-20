@@ -1,6 +1,6 @@
 +++
 date = '2026-03-20T14:16:27-04:00'
-draft = true
+draft = false
 title = 'How I think about statistical power'
 +++
 
