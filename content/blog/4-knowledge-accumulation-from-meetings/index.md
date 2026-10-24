@@ -5,7 +5,7 @@ title = 'My workflow for knowledge accumulation (from meetings)'
 categories = ['AI']
 +++
 
-Humans can only store so much information from a physical meeting. Things they don't understand will likely go over their heads. To maximally store the information from a meeting (where expert knowledge is often disseminated), I use the following workflow:
+Humans can only store so much information from a physical meeting. Things they don't understand will go over their heads. To maximally store the information from a meeting (where expert knowledge is often disseminated), I use the following workflow:
 
 1. Record audio of meeting
 2. Transcribe the audio into text. Expect transcription errors (acronyms, company names, abbreviations, internal project names, mispronunciation, etc.)
