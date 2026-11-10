@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import numpy as np
-from matplotlib.patches import ConnectionPatch
 from scipy import stats
 
 from common import *
@@ -71,7 +70,7 @@ def fig_revenue_per_session() -> None:
     orders = rev_a[conv_a]
     share = conv_a.mean()
     fig, (top, bottom) = plt.subplots(
-        2, 1, figsize=(7.2, 4.5), gridspec_kw={"height_ratios": [0.42, 3.2], "hspace": 0.55}
+        2, 1, figsize=(7.2, 4.5), gridspec_kw={"height_ratios": [0.42, 3.2], "hspace": 0.5}
     )
     top.barh([0], [1 - share], color=GRAY_TINT, height=0.9)
     top.barh([0], [share], left=[1 - share], color=ORANGE, height=0.9)
@@ -91,6 +90,7 @@ def fig_revenue_per_session() -> None:
         bottom.text(value + 5, ymax * height, label, va="top", color=INK)
     bottom.set_ylim(0, ymax * 1.22)
     bottom.set_xlim(0, cap)
+    bottom.set_title("Order values of the sessions that place an order")
     bottom.set_xlabel("Order value")
     bottom.xaxis.set_major_formatter(lambda v, _: f"${v:,.0f}")
     bottom.set_ylabel("Orders")
@@ -101,13 +101,6 @@ def fig_revenue_per_session() -> None:
         0.99, 0.5, f"{(orders > cap).mean():.1%} of orders exceed ${cap}\nlargest: ${orders.max():,.0f}",
         transform=bottom.transAxes, ha="right", va="top", color=INK2,
     )
-    for x_top, x_bottom in ((1 - share, 0.0), (1.0, 1.0)):
-        fig.add_artist(
-            ConnectionPatch(
-                (x_top, -0.5), (x_bottom, 1.0), coordsA=top.transData, coordsB=bottom.transAxes,
-                color=AXIS, linewidth=1.0,
-            )
-        )
     save(fig, 1, "revenue-per-session")
 
 
