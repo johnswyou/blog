@@ -7,7 +7,7 @@ from scipy import stats
 from common import *
 
 
-def two_arm_test_stats(x_a, x_b, alpha=0.05):
+def two_group_test_stats(x_a, x_b, alpha=0.05):
     """Welch's test for a difference in means; x_a and x_b hold one value per session."""
     n_a, n_b = len(x_a), len(x_b)
     diff = x_b.mean() - x_a.mean()
@@ -26,11 +26,11 @@ def relative_lift(x_a, x_b, alpha=0.05):
     return ratio - 1, (ratio - 1 - half, ratio - 1 + half)
 
 
-data = two_arm_test()
+data = two_group_test()
 rev_a, rev_b = data["A"], data["B"]
 conv_a, conv_b = rev_a > 0, rev_b > 0
 n_a, n_b = rev_a.size, rev_b.size
-tests = {"cr": two_arm_test_stats(conv_a, conv_b), "rps": two_arm_test_stats(rev_a, rev_b)}
+tests = {"cr": two_group_test_stats(conv_a, conv_b), "rps": two_group_test_stats(rev_a, rev_b)}
 lifts = {"cr": relative_lift(conv_a, conv_b), "rps": relative_lift(rev_a, rev_b)}
 
 
@@ -145,7 +145,7 @@ def resample_means(rng, orders, share, n, reps=20_000, chunk=2_000):
 
 
 def fig_clt_check() -> None:
-    """Null distribution of two statistics, by resampling arm A's sessions."""
+    """Null distribution of two statistics, by resampling group A's sessions."""
     rng = np.random.default_rng(1)
     orders, share, mean = rev_a[conv_a], conv_a.mean(), rev_a.mean()
     sizes = (500, 5_000, n_a)
@@ -156,9 +156,9 @@ def fig_clt_check() -> None:
         m1, se1 = resample_means(rng, orders, share, n)
         m2, se2 = resample_means(rng, orders, share, n)
         with np.errstate(divide="ignore", invalid="ignore"):
-            one_arm = np.where(se1 > 0, (m1 - mean) / se1, -np.inf)
-            two_arms = (m2 - m1) / np.sqrt(se1**2 + se2**2)
-        for row, (z, label) in enumerate(((one_arm, "one arm"), (two_arms, "two arms"))):
+            one_group = np.where(se1 > 0, (m1 - mean) / se1, -np.inf)
+            two_groups = (m2 - m1) / np.sqrt(se1**2 + se2**2)
+        for row, (z, label) in enumerate(((one_group, "one group"), (two_groups, "two groups"))):
             ax = axes[row, col]
             ax.hist(z, bins=bins, weights=np.full(z.size, 1 / (z.size * (bins[1] - bins[0]))), color=ORANGE_TINT, edgecolor="white", linewidth=0.5)
             ax.plot(xs, stats.norm.pdf(xs), color=INK, linewidth=1.4)
@@ -172,8 +172,8 @@ def fig_clt_check() -> None:
             ax.spines["left"].set_visible(False)
             print(f"clt n={n} {label}: below {lower:.4f}, above {upper:.4f}")
         axes[0, col].set_title(f"{n:,} sessions", loc="center", fontweight="normal")
-    axes[0, 0].set_ylabel("One arm's mean", color=INK)
-    axes[1, 0].set_ylabel("z for two arms", color=INK)
+    axes[0, 0].set_ylabel("One group's mean", color=INK)
+    axes[1, 0].set_ylabel("z for two groups", color=INK)
     axes[1, 1].set_xlabel("Standardized value")
     save(fig, 1, "clt-check")
 

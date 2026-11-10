@@ -1,4 +1,4 @@
-"""Part 2: how long a two-arm test should run."""
+"""Part 2: how long a two-group test should run."""
 from __future__ import annotations
 
 import numpy as np
@@ -55,7 +55,7 @@ def variances(kpi, lift):
     return VAR["rps"], VAR["rps"] * (1 + lift)  # variance moves with the mean
 
 
-def sessions_per_arm(kpi, lift, alpha=ALPHA, power=POWER, equal_var=False):
+def sessions_per_group(kpi, lift, alpha=ALPHA, power=POWER, equal_var=False):
     var_a, var_b = variances(kpi, 0.0 if equal_var else lift)
     return (Z(1 - alpha / 2) + Z(power)) ** 2 * (var_a + var_b) / (lift * MEAN[kpi]) ** 2
 
@@ -68,7 +68,7 @@ def power_at(kpi, lift, n, alpha=ALPHA):
 
 
 def mde(kpi, n, alpha=ALPHA, power=POWER):
-    return optimize.brentq(lambda lift: sessions_per_arm(kpi, lift, alpha, power) - n, 1e-4, 1.0)
+    return optimize.brentq(lambda lift: sessions_per_group(kpi, lift, alpha, power) - n, 1e-4, 1.0)
 
 
 def weeks_needed(total_sessions, quantile=0.10):
@@ -139,15 +139,15 @@ def report() -> None:
     zz = (Z(1 - ALPHA / 2) + Z(POWER)) ** 2
     print(f"(z_a/2 + z_b)^2 = {zz:.4f}; z {Z(1 - ALPHA / 2):.4f} {Z(POWER):.4f}")
     for kpi in ("cr", "rps"):
-        n = sessions_per_arm(kpi, LIFT)
-        n_eq = sessions_per_arm(kpi, LIFT, equal_var=True)
+        n = sessions_per_group(kpi, LIFT)
+        n_eq = sessions_per_group(kpi, LIFT, equal_var=True)
         va, vb = variances(kpi, LIFT)
         print(
             f"{kpi}: var_a {va:.5f} var_b {vb:.5f} delta {LIFT * MEAN[kpi]:.5f} cv {np.sqrt(VAR[kpi]) / MEAN[kpi]:.3f}  "
-            f"n/arm {n:,.0f} (equal-var {n_eq:,.0f}, ratio {n / n_eq:.4f})  total {2 * n:,.0f}  weeks {weeks_needed(2 * n)}"
+            f"n/group {n:,.0f} (equal-var {n_eq:,.0f}, ratio {n / n_eq:.4f})  total {2 * n:,.0f}  weeks {weeks_needed(2 * n)}"
             f"  (median traffic: {weeks_needed(2 * n, 0.5)})  days at median {2 * n / (WEEK_MEDIAN / 7):.1f}"
         )
-    print(f"n ratio rps/cr {sessions_per_arm('rps', LIFT) / sessions_per_arm('cr', LIFT):.3f}; 1 + cv^2/(1-p) = {1 + ORDER_CV**2 / (1 - P0):.3f}")
+    print(f"n ratio rps/cr {sessions_per_group('rps', LIFT) / sessions_per_group('cr', LIFT):.3f}; 1 + cv^2/(1-p) = {1 + ORDER_CV**2 / (1 - P0):.3f}")
     p_b = P0 * 1.05
     earlier = (Z(0.975) * np.sqrt(2 * P0 * (1 - P0)) + Z(0.8) * np.sqrt(P0 * (1 - P0) + p_b * (1 - p_b))) ** 2 / (P0 * 0.05) ** 2
     print(f"cr n by the earlier post's formula {earlier:,.0f}")
@@ -156,16 +156,16 @@ def report() -> None:
     for w in (1, 2, 3, 4, 6, 8):
         n = traffic(w) / 2
         print(
-            f"{w}w: n/arm {n:,.0f}  mde cr {mde('cr', n):.2%} rps {mde('rps', n):.2%}  "
+            f"{w}w: n/group {n:,.0f}  mde cr {mde('cr', n):.2%} rps {mde('rps', n):.2%}  "
             f"power@5% cr {power_at('cr', LIFT, n):.1%} rps {power_at('rps', LIFT, n):.1%}"
         )
-    n1 = 250_282  # sessions per arm in the Part 1 test
+    n1 = 250_282  # sessions per group in the Part 1 test
     print(f"Part 1 test (n {n1:,}): power@5% cr {power_at('cr', LIFT, n1):.1%} rps {power_at('rps', LIFT, n1):.1%}")
     # P(CR significant and RPS not) is checked by simulation below.
     rng = np.random.default_rng(11)
     both = np.zeros((4000, 2), dtype=bool)
     for i in range(4000):
-        a, b = arm_stats(rng, n1, TWO_ARM["A"]), arm_stats(rng, n1, TWO_ARM["B"])
+        a, b = group_stats(rng, n1, TWO_GROUP["A"]), group_stats(rng, n1, TWO_GROUP["B"])
         z_cr = (b[0] - a[0]) / np.sqrt((a[0] * (1 - a[0]) + b[0] * (1 - b[0])) / n1)
         z_rps = (b[1] - a[1]) / np.sqrt((a[2] + b[2]) / n1)
         both[i] = abs(z_cr) > 1.96, abs(z_rps) > 1.96
@@ -178,7 +178,7 @@ def report() -> None:
     for label, a, pw in (("alpha .10", 0.10, 0.80), ("power .70", 0.05, 0.70), ("power .90", 0.05, 0.90), ("alpha .10 power .70", 0.10, 0.70)):
         print(f"{label}: {(Z(1 - a / 2) + Z(pw)) ** 2 / zz:.3f}")
     for lift in (0.03, 0.07, 0.10):
-        print(f"MDE {lift:.0%}: {sessions_per_arm('rps', lift) / sessions_per_arm('rps', LIFT):.3f}")
+        print(f"MDE {lift:.0%}: {sessions_per_group('rps', lift) / sessions_per_group('rps', LIFT):.3f}")
     cv2 = VAR["rps"] / RPS0**2
     for q in (0.99, 0.999):
         cap, cv2_capped = capped_cv2(q)
@@ -249,10 +249,10 @@ def fig_sessions_vs_mde() -> None:
     fig, ax = plt.subplots(figsize=(7.2, 4.1))
     for kpi, label in (("rps", "Revenue per session"), ("cr", "Conversion rate")):
         color, _ = KPI[kpi]
-        n = np.array([sessions_per_arm(kpi, lift) for lift in lifts])
+        n = np.array([sessions_per_group(kpi, lift) for lift in lifts])
         ax.plot(100 * lifts, n, color=color)
         ax.text(100 * lifts[-1] + 0.15, n[-1], label, va="center", color=INK)
-        n5 = sessions_per_arm(kpi, LIFT)
+        n5 = sessions_per_group(kpi, LIFT)
         ax.plot([5], [n5], "o", color=color, markersize=8, markeredgecolor="white", markeredgewidth=2, zorder=3)
         ax.text(5.2, n5 * 1.06, f"{n5 / 1e3:,.0f}K", va="bottom", color=INK)
     ax.set_yscale("log")
@@ -261,7 +261,7 @@ def fig_sessions_vs_mde() -> None:
     ax.set_yticks([5e4, 1e5, 2e5, 5e5, 1e6, 2e6], ["50K", "100K", "200K", "500K", "1M", "2M"])
     ax.minorticks_off()
     ax.set_xlabel("Minimum detectable effect, as a lift over A")
-    ax.set_ylabel("Sessions needed per arm")
+    ax.set_ylabel("Sessions needed per group")
     ax.xaxis.set_major_formatter(lambda v, _: f"{v:.0f}%")
     ax.yaxis.grid(True)
     ax.set_axisbelow(True)
@@ -278,7 +278,7 @@ def fig_duration() -> None:
     ax.text(4.85, forecast[4] + 40, "sessions forecast by the end\nof each week (10th percentile)", ha="right", va="bottom", color=INK2)
     for kpi, label in (("cr", "Conversion rate"), ("rps", "Revenue per session")):
         color, _ = KPI[kpi]
-        total = 2 * sessions_per_arm(kpi, LIFT) / 1e3
+        total = 2 * sessions_per_group(kpi, LIFT) / 1e3
         done = weeks_needed(total * 1e3)
         ax.axhline(total, color=color, linewidth=2.0, zorder=1)
         ax.text(6.25, total + 18, f"{label} needs {total:,.0f}K", ha="right", va="bottom", color=INK)
@@ -317,7 +317,7 @@ def fig_power_at_two_weeks() -> None:
     ax.set_xlim(0, 10)
     ax.set_ylim(0, 1.02)
     ax.set_xlabel("True lift of B over A")
-    ax.set_ylabel(f"Power with {n / 1e3:.0f}K sessions per arm")
+    ax.set_ylabel(f"Power with {n / 1e3:.0f}K sessions per group")
     ax.xaxis.set_major_formatter(lambda v, _: f"{v:.0f}%")
     ax.yaxis.set_major_formatter(lambda v, _: f"{v:.0%}")
     ax.yaxis.grid(True)

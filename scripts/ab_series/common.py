@@ -38,13 +38,13 @@ DOW = np.array([1.08, 1.04, 1.00, 0.98, 0.90, 0.92, 1.08])  # Mon..Sun, mean 1
 HISTORY_WEEKS = 12
 PROMO_DAYS = (32, 33, 34)  # Fri-Sun of history week 5: a sale weekend
 
-# True conversion rates; A is the current page. Order values are identical in every arm.
-TWO_ARM = {"A": 0.0300, "B": 0.0315}
-FOUR_ARM = {"A": 0.0300, "B": 0.0309, "C": 0.0321, "D": 0.0333}
+# True conversion rates; A is the current page. Order values are identical in every group.
+TWO_GROUP = {"A": 0.0300, "B": 0.0315}
+FOUR_GROUP = {"A": 0.0300, "B": 0.0309, "C": 0.0321, "D": 0.0333}
 
 # Seeds. The two test datasets were picked to illustrate a common outcome (CR resolved,
-# RPS not); they are not random draws. Part 2 reports how often the two-arm outcome occurs.
-TRAFFIC_SEED, TWO_ARM_SEED, FOUR_ARM_SEED = 12, 290, 129
+# RPS not); they are not random draws. Part 2 reports how often the two-group outcome occurs.
+TRAFFIC_SEED, TWO_GROUP_SEED, FOUR_GROUP_SEED = 12, 290, 129
 
 
 def rps_moments(p: float) -> tuple[float, float]:
@@ -68,30 +68,30 @@ def order_values(rng: np.random.Generator, size: int) -> np.ndarray:
     return rng.lognormal(ORDER_MU, ORDER_SIGMA, size)
 
 
-def two_arm_test() -> dict[str, np.ndarray]:
+def two_group_test() -> dict[str, np.ndarray]:
     """Parts 1-2: A vs B over the two weeks after the history window."""
     n = int(daily_sessions()[84:98].sum())
-    return simulate_sessions(np.random.default_rng(TWO_ARM_SEED), n, TWO_ARM)
+    return simulate_sessions(np.random.default_rng(TWO_GROUP_SEED), n, TWO_GROUP)
 
 
-def four_arm_test() -> dict[str, np.ndarray]:
+def four_group_test() -> dict[str, np.ndarray]:
     """Parts 3-4: A vs B, C, D over four weeks."""
     n = int(daily_sessions()[112:140].sum())
-    return simulate_sessions(np.random.default_rng(FOUR_ARM_SEED), n, FOUR_ARM)
+    return simulate_sessions(np.random.default_rng(FOUR_GROUP_SEED), n, FOUR_GROUP)
 
 
-def simulate_sessions(rng: np.random.Generator, n: int, arms: dict[str, float]):
-    """Revenue of each session (0 if no purchase), grouped by the arm it was randomized to."""
-    labels = list(arms)
-    arm = rng.integers(0, len(labels), n)
-    converted = rng.random(n) < np.array([arms[a] for a in labels])[arm]
+def simulate_sessions(rng: np.random.Generator, n: int, groups: dict[str, float]):
+    """Revenue of each session (0 if no purchase), keyed by the group it was randomized to."""
+    labels = list(groups)
+    group = rng.integers(0, len(labels), n)
+    converted = rng.random(n) < np.array([groups[a] for a in labels])[group]
     revenue = np.zeros(n)
     revenue[converted] = order_values(rng, int(converted.sum()))
-    return {a: revenue[arm == i] for i, a in enumerate(labels)}
+    return {a: revenue[group == i] for i, a in enumerate(labels)}
 
 
-def arm_stats(rng: np.random.Generator, n: int, p: float) -> tuple[float, float, float]:
-    """(conversion rate, mean revenue, revenue variance) of one simulated arm of n sessions.
+def group_stats(rng: np.random.Generator, n: int, p: float) -> tuple[float, float, float]:
+    """(conversion rate, mean revenue, revenue variance) of one simulated group of n sessions.
 
     Draws only the orders, so repeating a whole test thousands of times stays cheap.
     """

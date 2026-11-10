@@ -1,13 +1,13 @@
 +++
 date = '2026-11-09T12:01:00-05:00'
 draft = true
-title = 'A/B testing, part 2: how long should a two-arm test run?'
+title = 'A/B testing, part 2: how long should a two-group test run?'
 categories = ['A/B testing']
 +++
 
-*This is part 2 of a four-part series on A/B testing in e-commerce. [Part 1](/blog/5-ab-testing-1-hypothesis-tests/) tested a finished two-arm test. This post plans one. Parts [3](/blog/7-ab-testing-3-abn-mcb/) and [4](/blog/8-ab-testing-4-abn-test-duration/) repeat both steps for tests with three or more arms.*
+*This is part 2 of a four-part series on A/B testing in e-commerce. [Part 1](/blog/5-ab-testing-1-hypothesis-tests/) tested a finished two-group test. This post plans one. Parts [3](/blog/7-ab-testing-3-abn-mcb/) and [4](/blog/8-ab-testing-4-abn-test-duration/) repeat both steps for tests with three or more groups.*
 
-In part 1 a store tested a redesigned product page (arm B) against the current one (arm A) for two weeks. The redesign truly lifted both conversion rate (CR) and revenue per session (RPS) by 5%. The CR test detected the lift and the RPS test did not.
+In part 1 a store tested a redesigned product page (group B) against the current one (group A) for two weeks. The redesign truly lifted both conversion rate (CR) and revenue per session (RPS) by 5%. The CR test detected the lift and the RPS test did not.
 
 How long a test runs should be decided before it starts. The duration is the number of sessions the test needs divided by the number of sessions the store receives, and the two halves of that fraction are the first two sections of this post. The third section covers what to do when the answer is longer than the business is willing to wait.
 
@@ -26,7 +26,7 @@ Power has no meaning without $\delta$. An [earlier post](/blog/3-how-i-think-abo
 
 ### The formula
 
-Part 1's test rejects $H_0$ when $\vert\hat\Delta\vert \gt z_{\alpha/2} \cdot \text{SE}$, where $z_{\alpha/2}$ is the upper $\alpha/2$ quantile of the standard normal (1.960 for $\alpha = 0.05$). With $n$ sessions in each arm, $\text{SE}^2 = (\sigma_A^2 + \sigma_B^2)/n$. If the true difference is $\delta$, then $\hat\Delta \approx N(\delta, \text{SE}^2)$ and
+Part 1's test rejects $H_0$ when $\vert\hat\Delta\vert \gt z_{\alpha/2} \cdot \text{SE}$, where $z_{\alpha/2}$ is the upper $\alpha/2$ quantile of the standard normal (1.960 for $\alpha = 0.05$). With $n$ sessions in each group, $\text{SE}^2 = (\sigma_A^2 + \sigma_B^2)/n$. If the true difference is $\delta$, then $\hat\Delta \approx N(\delta, \text{SE}^2)$ and
 
 $$\text{power} \approx \Phi\left(\frac{\delta}{\text{SE}} - z_{\alpha/2}\right).$$
 
@@ -48,7 +48,7 @@ This store's orders have $m = s_V = \\$100$. At a conversion rate of 3% the firs
 
 $$\sigma_B^2 \approx (1+\ell)\sigma_A^2, \qquad n \approx \frac{(z_{\alpha/2} + z_\beta)^2 (2+\ell) \sigma_A^2}{\delta^2}.$$
 
-Assuming homogeneity drops the $\ell$ and understates $n$ by a factor $1 + \ell/2$, which is 2.5% for a 5% lift. For a small effect that works through conversion, homogeneity is an adequate planning assumption: the error is smaller than the uncertainty in the traffic forecast. It is inadequate for a change designed to alter what people buy, such as bundles, a free-shipping threshold or new prices, because the variance of revenue can then move much more than its mean. In that case plan with the larger of the two plausible variances in both arms. The analysis itself never needs the assumption, since Welch's test estimates each variance separately.
+Assuming homogeneity drops the $\ell$ and understates $n$ by a factor $1 + \ell/2$, which is 2.5% for a 5% lift. For a small effect that works through conversion, homogeneity is an adequate planning assumption: the error is smaller than the uncertainty in the traffic forecast. It is inadequate for a change designed to alter what people buy, such as bundles, a free-shipping threshold or new prices, because the variance of revenue can then move much more than its mean. In that case plan with the larger of the two plausible variances in both groups. The analysis itself never needs the assumption, since Welch's test estimates each variance separately.
 
 ### The same formula in relative terms
 
@@ -71,12 +71,12 @@ With $\ell = 0.05$:
 | $\mu_A$ | 3.00% | $\\$3.00$ |
 | $\sigma_A$ | 0.1706 | $\\$24.30$ |
 | $\delta$ | 0.15 pp | $\\$0.15$ |
-| Sessions per arm | 207,935 | 422,271 |
+| Sessions per group | 207,935 | 422,271 |
 | Sessions in total | 415,870 | 844,543 |
 
-These use the lifted variance for arm B. Equal variances would give 203,024 and 411,972 sessions per arm.
+These use the lifted variance for group B. Equal variances would give 203,024 and 411,972 sessions per group.
 
-![Sessions needed per arm against the minimum detectable effect, on a log scale, for lifts from 2% to 12%. Both curves fall steeply. At a 5% lift conversion rate needs 208K sessions per arm and revenue per session needs 422K. The revenue curve sits at about twice the conversion-rate curve throughout.](sessions-vs-mde.svg)
+![Sessions needed per group against the minimum detectable effect, on a log scale, for lifts from 2% to 12%. Both curves fall steeply. At a 5% lift conversion rate needs 208K sessions per group and revenue per session needs 422K. The revenue curve sits at about twice the conversion-rate curve throughout.](sessions-vs-mde.svg)
 
 Because $n$ is proportional to $1/\delta^2$, halving the MDE quadruples the test.
 
@@ -112,9 +112,9 @@ Suppose the people who commissioned the test care about revenue and want a decis
 
 ### State what two weeks buys
 
-Two weeks deliver 497K sessions, 249K per arm. Inverting the sample size formula gives the power of that test at any true lift.
+Two weeks deliver 497K sessions, 249K per group. Inverting the sample size formula gives the power of that test at any true lift.
 
-![Power of a two-week test with 249K sessions per arm, against the true lift. At a 5% lift the conversion-rate test has 87% power and the revenue-per-session test has 58%. Power reaches 80% at a lift of 4.6% for conversion rate and 6.5% for revenue per session.](power-at-two-weeks.svg)
+![Power of a two-week test with 249K sessions per group, against the true lift. At a 5% lift the conversion-rate test has 87% power and the revenue-per-session test has 58%. Power reaches 80% at a lift of 4.6% for conversion rate and 6.5% for revenue per session.](power-at-two-weeks.svg)
 
 In two weeks the RPS test reliably detects lifts of 6.5% or more, and it finds a 5% lift a little more often than a coin flip would. Part 1's outcome is a common one: in repeated simulations of that test, CR is significant while RPS is not in 30% of runs.
 
@@ -139,7 +139,7 @@ The MDE can be raised only if lifts below the new value are not worth acting on.
 
 Capping replaces every order value above a chosen ceiling by the ceiling, which removes the variance contributed by rare, very large orders. The KPI becomes capped RPS. The gain here is 10% because this store's order values are only moderately skewed. Stores with occasional bulk orders gain far more.
 
-The last row runs the other way. With a share $r$ of the traffic in one arm, the test needs $1/(4r(1-r))$ times the sessions of an even split, so protecting the control with an 80/20 split costs 56% more traffic. Dilution costs traffic in a similar way. Suppose only a fraction $f$ of the analyzed sessions could have seen the change. The difference in means shrinks by the factor $f$. If the unexposed sessions buy about as often as the exposed ones, as when a change shown only on mobile is analyzed over all devices, the variance does not shrink and the test takes about $1/f$ times as long as one restricted to exposed sessions. If the unexposed sessions hardly buy at all, as with sessions that never reach a product page, they add little variance and little is lost. Restricting the analysis to sessions that could have seen the change never hurts.
+The last row runs the other way. With a share $r$ of the traffic in one group, the test needs $1/(4r(1-r))$ times the sessions of an even split, so protecting the control with an 80/20 split costs 56% more traffic. Dilution costs traffic in a similar way. Suppose only a fraction $f$ of the analyzed sessions could have seen the change. The difference in means shrinks by the factor $f$. If the unexposed sessions buy about as often as the exposed ones, as when a change shown only on mobile is analyzed over all devices, the variance does not shrink and the test takes about $1/f$ times as long as one restricted to exposed sessions. If the unexposed sessions hardly buy at all, as with sessions that never reach a product page, they add little variance and little is lost. Restricting the analysis to sessions that could have seen the change never hurts.
 
 One popular technique is unavailable here. Adjusting for each shopper's behavior before the test (CUPED) can cut variance substantially, but it requires following shoppers across sessions. Adjusting for what is known about a session before it is assigned, such as device or traffic source, remains possible and usually gains less.
 
@@ -149,13 +149,13 @@ If the business wants the chance to stop at two weeks when the effect is large, 
 
 $$\vert z \vert \gt 2.80 \text{ at week 2}, \qquad \vert z \vert \gt 1.98 \text{ at week 4}.$$
 
-The two $z$ statistics are jointly normal with correlation $\sqrt{1/2}$, because the first look uses half of the final data, and the boundaries are chosen so that the probability of crossing either one under $H_0$ is 0.05. The price is small: the final threshold moves from 1.96 to 1.98, and the sessions needed for 80% power rise by 0.8%. In return, with the 501K sessions per arm that four weeks deliver, the RPS test stops at week 2 with probability 26% if the true lift is 5%, 66% if it is 7.5%, and 93% if it is 10%.
+The two $z$ statistics are jointly normal with correlation $\sqrt{1/2}$, because the first look uses half of the final data, and the boundaries are chosen so that the probability of crossing either one under $H_0$ is 0.05. The price is small: the final threshold moves from 1.96 to 1.98, and the sessions needed for 80% power rise by 0.8%. In return, with the 501K sessions per group that four weeks deliver, the RPS test stops at week 2 with probability 26% if the true lift is 5%, 66% if it is 7.5%, and 93% if it is 10%.
 
 ### Do not peek
 
 The unplanned version of an early look is to check the dashboard every day and stop the first time $p \lt 0.05$. Each look is another chance for noise to cross the threshold.
 
-![False positive rate of a test on two identical arms when it is stopped at the first p-value below 0.05. Checked once at the end: 5%. Twice: 8%. Weekly for four weeks: 13%. Daily for two weeks: 22%. Daily for four weeks: 27%.](peeking.svg)
+![False positive rate of a test on two identical groups when it is stopped at the first p-value below 0.05. Checked once at the end: 5%. Twice: 8%. Weekly for four weeks: 13%. Daily for two weeks: 22%. Daily for four weeks: 27%.](peeking.svg)
 
 A related mistake is to run the short test, see $p \gt 0.05$ on RPS, and report that the redesign has no effect on revenue. Report the confidence interval. Part 1's interval for the RPS lift ran from $-1.1$% to $+7.9$%, which rules out very little.
 
@@ -168,7 +168,7 @@ A related mistake is to run the short test, see $p \gt 0.05$ on RPS, and report 
 5. If the duration is too long, show what the acceptable duration can detect, then consider a more sensitive KPI, a larger MDE, or one planned early look.
 6. Fix the duration and the analysis before the test starts.
 
-[Part 3](/blog/7-ab-testing-3-abn-mcb/) moves to tests with more than two arms, where neither the analysis of part 1 nor the planning of this post carries over unchanged.
+[Part 3](/blog/7-ab-testing-3-abn-mcb/) moves to tests with more than two groups, where neither the analysis of part 1 nor the planning of this post carries over unchanged.
 
 ## Code
 
@@ -176,13 +176,13 @@ A related mistake is to run the short test, see $p \gt 0.05$ on RPS, and report 
 import numpy as np
 from scipy.stats import norm
 
-def sessions_per_arm(var_a, var_b, delta, alpha=0.05, power=0.80):
+def sessions_per_group(var_a, var_b, delta, alpha=0.05, power=0.80):
     z = norm.ppf(1 - alpha / 2) + norm.ppf(power)
     return z**2 * (var_a + var_b) / delta**2
 
 p, lift = 0.030, 0.05
-sessions_per_arm(p * (1 - p), p * (1 + lift) * (1 - p * (1 + lift)), lift * p)  # CR: 207,935
-sessions_per_arm(24.3**2, 24.3**2 * (1 + lift), lift * 3.00)                   # RPS: 422,271
+sessions_per_group(p * (1 - p), p * (1 + lift) * (1 - p * (1 + lift)), lift * p)  # CR: 207,935
+sessions_per_group(24.3**2, 24.3**2 * (1 + lift), lift * 3.00)                   # RPS: 422,271
 
 def weeks_needed(total_sessions, weekly_totals, quantile=0.10):
     """Smallest whole number of weeks whose forecast at `quantile` reaches the total."""
