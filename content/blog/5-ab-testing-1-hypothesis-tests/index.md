@@ -5,39 +5,61 @@ title = 'A/B testing, part 1: testing for a difference between two groups'
 categories = ['A/B testing']
 +++
 
-*This is part 1 of a four-part series on A/B testing in e-commerce. Parts 1 and 2 cover a test with two groups: how to read its result (this post) and [how long to run it](/blog/6-ab-testing-2-test-duration/). Parts 3 and 4 cover a test with three or more groups: [how to pick a winner](/blog/7-ab-testing-3-abn-mcb/) and [how long to run it](/blog/8-ab-testing-4-abn-test-duration/).*
+*This is part 1 of a four-part series on A/B testing in e-commerce. Parts 1 and 2 cover a test with two groups: how to determine the winner (this post) and [how long to run the A/B test](/blog/6-ab-testing-2-test-duration/). Parts 3 and 4 cover a test with three or more groups: [how to pick a winner](/blog/7-ab-testing-3-abn-mcb/) and [how long to run the test](/blog/8-ab-testing-4-abn-test-duration/).*
 
-An online store has redesigned its product page. For two weeks, every session that reached a product page was randomly shown either the current page (group A, the control) or the redesign (group B, the treatment), each with probability one half. The test is over. Did the redesign change anything?
+Suppose an online store has redesigned its product page. For two weeks, every session that reached a product page was randomly shown either the current page (group A, the control) or the redesign (group B, the treatment), each with probability one half. The test finishes. Did the redesign change anything? **This is the central question that this post will seek to answer**.
 
-The answer depends on the metric. This post tests two:
+The answer depends on the metric. This post considers two:
 
 - **Conversion rate (CR):** the share of sessions that end in a purchase.
 - **Revenue per session (RPS):** revenue divided by the number of sessions.
 
-A **session** is one visit: a run of activity with no pause longer than 30 minutes. The session, and not the shopper, is the unit of observation throughout this series, because many stores cannot follow a shopper from one visit to the next. Two sessions may belong to the same person and the store has no way to tell. The last section covers what this changes.
+A **session** is one visit: a period of activity with no pause longer than 30 minutes. The session is the unit of observation that we will consider throughout this series. 
 
-The data are simulated, with conversion rates and order values typical of e-commerce. That lets each conclusion be checked against the truth, which is revealed near the end.
+> **Note**: We will not consider the user (or shopper) as the unit of observation. The topic of *identity resolution* - linking multiple sessions or events to the same underlying user - is beyond the scope of this series, and it will suffice to say that in practice, collecting anonymous session data is far easier than reliably tracking users across time. 
+
+When the session is the unit of observation, multiple sessions may belong to the same person and there is no way to tell if this is the case. This is because each session is anonymous. Strictly speaking, sessions from the same person are not independent. However, by randomly routing traffic to either the control group or treatment group, we can still compare the two groups as if the sessions were independent. More on this in [Are sessions independent?](#are-sessions-independent).
+
+The data are simulated, with conversion rates and order values typical of e-commerce. The advantage of simulating data is that we know the true underlying parameter values that define our data generating distributions, which means we can compare the statistical conclusions we draw to the truth.
 
 ## The data
 
 | Group | Sessions | Orders | CR | RPS | SD |
 | :--- | ---: | ---: | ---: | ---: | ---: |
-| A (control) | 250,115 | 7,522 | 3.007% | $\\$3.035$ | $\\$24.28$ |
-| B (redesign) | 250,449 | 7,852 | 3.135% | $\\$3.138$ | $\\$24.18$ |
+| A (control) | 250,115 | 7,522 | 3.007% | \$3.035 | \$24.28 |
+| B (redesign) | 250,449 | 7,852 | 3.135% | \$3.138 | \$24.18 |
 
 SD is the standard deviation of revenue per session. Each session produces one number, the revenue it brought in.
 
+> Let $X_i$ be the revenue of session $i$ (zero if the session ends without a purchase) and $n$ the number of sessions in the group. Then
+>
+> $$\text{SD} = \sqrt{\frac{1}{n-1}\sum_{i=1}^{n}\left(X_i - \text{RPS}\right)^2}.$$
+
+Non-zero revenue values are called "order values". Shown below in orange is the observed distribution of order values.
+
 ![Top: a bar showing that 97.0% of group A's sessions end without a purchase and 3.0% place an order. Bottom: a histogram of the order values of that 3.0%, peaking near 40 dollars with a long right tail; the median order is 72 dollars and the mean is 101 dollars.](revenue-per-session.svg)
 
-In statistical terms, revenue per session is *zero-inflated* (most values are exactly zero) and *right-skewed* (a few large orders pull the mean above the median). Both properties matter when we test RPS.
+In statistical terms, revenue per session is *zero-inflated* (most values are exactly zero) and *right-skewed* (a few large orders pull the mean above the median). Both properties matter when conducting a hypothesis test, as we will see shortly.
 
-### Check the split first
+### Preliminary check: Is traffic really being split randomly between groups?
 
-Before comparing the groups, check that the randomization produced the split it was designed to produce. If each session is assigned by a fair coin, then
+Before comparing the groups, check that traffic really is being routed randomly to each group. If this is the case, then
 
-$$\chi^2 = \frac{(n_A - n_B)^2}{n_A + n_B} = \frac{334^2}{500{,}564} = 0.22$$
+$$\chi^2 = \frac{(n_A - n_B)^2}{n_A + n_B}$$
 
-follows a chi-square distribution with one degree of freedom, which gives $p = 0.64$. The split looks healthy. A very small p-value here is called a *sample ratio mismatch*. It means one group is losing or gaining sessions for a reason other than chance (a redirect that drops sessions, a bot filter that treats the pages differently), and the KPI comparison cannot be trusted until the cause is found.
+approximately follows a chi-square distribution with one degree of freedom.
+
+> **Note**: The above formula assumes a 50/50 traffic split between the control and treatment group. If this is not the case, the general form of the formula is:
+>
+> $$\chi^2 = \frac{(n_A - rN)^2}{N r (1 - r)},$$
+>
+> where $N = n_A + n_B$ and $r$ is the share of traffic assigned to group A. Setting $r = 1/2$ recovers the formula above.
+
+If your chi-square statistic takes a value in the upper 5 percentile tail of the chi-square distribution, then there is evidence against your traffic routing being truly random. A very small p-value here is called a *sample ratio mismatch*. It means one group is losing or gaining sessions for a reason other than chance (e.g., a redirect that drops sessions, a bot filter that treats the two groups differently), and the KPI comparison cannot be trusted until the cause is found. In our case, the split looks healthy:
+
+$$\chi^2 = \frac{334^2}{500{,}564} = 0.22$$
+
+which gives a p-value of $P\left(\chi^2_1 \gt 0.22\right)=0.64$, often simplified to just $p = 0.64$.
 
 ## Both KPIs are means
 
@@ -47,7 +69,7 @@ $$\text{CR} = \frac{1}{n}\sum_{i=1}^{n} C_i, \qquad \text{RPS} = \frac{1}{n}\sum
 
 CR is the mean of a 0/1 variable and RPS is the mean of a dollar amount. A test of either KPI is therefore a test of a difference between two means, and one procedure covers both.
 
-## Testing a difference in means
+## Testing for a difference in means
 
 For group A, write $n_A$ for the number of sessions, $\mu_A$ and $\sigma_A^2$ for the true mean and variance of the per-session value, and $\bar X_A$ and $s_A^2$ for the sample mean and sample variance. Group B is labeled the same way. The true mean is the value the sample mean would settle on if the group received unlimited sessions.
 
@@ -67,9 +89,7 @@ If $H_0$ is true, $z$ is approximately standard normal. The **p-value** is the p
 
 $$p = 2\left(1 - \Phi(\vert z \vert)\right),$$
 
-where $\Phi$ is the standard normal distribution function. Before looking at the data we fix a **significance level** $\alpha = 0.05$, and we reject $H_0$ if $p \lt \alpha$, which is the same as $\vert z \vert \gt 1.96$. A test run this way rejects a true $H_0$ in 5% of experiments.
-
-This is Welch's t-test. With hundreds of thousands of sessions per group, its t distribution is indistinguishable from the normal.
+where $\Phi$ is the standard normal distribution function. Before looking at the data we fix a **significance level** $\alpha = 0.05$, and we reject $H_0$ if $p \lt \alpha$, which is the same as $\vert z \vert \gt 1.96$. A test run this way has a 5% probability of rejecting a true $H_0$.
 
 The same quantities give a 95% **confidence interval** for $\mu_B - \mu_A$, namely $\hat\Delta \pm 1.96 \cdot \text{SE}$. The test rejects $H_0$ exactly when this interval excludes zero.
 
@@ -85,7 +105,7 @@ $$z = \frac{0.03135 - 0.03007}{0.000488} = 2.62, \qquad p = 0.009.$$
 
 We reject $H_0$: the conversion rates of the two pages differ.
 
-Textbooks usually present this test with a single pooled variance $\hat p(1-\hat p)$, where $\hat p$ is the conversion rate of both groups combined. The reasoning is that under $H_0$ the two conversion rates are equal, and for a 0/1 variable equal means force equal variances. Here the pooled version also gives $z = 2.62$. Equal variances return in [part 3](/blog/7-ab-testing-3-abn-mcb/), where they are an assumption of the method and no longer a consequence of the null hypothesis.
+> Textbooks usually present this test with a single pooled variance $\hat p(1-\hat p)$, where $\hat p$ is the conversion rate of both groups combined. The reasoning is that under $H_0$ the two conversion rates are equal, and for a 0/1 variable equal means force equal variances. Here the pooled version also gives $z = 2.62$.
 
 ## Revenue per session
 
@@ -95,26 +115,31 @@ $$\text{SE} = \sqrt{\frac{24.28^2}{250{,}115} + \frac{24.18^2}{250{,}449}} = 0.0
 
 $$z = \frac{3.138 - 3.035}{0.0685} = 1.50, \qquad p = 0.134.$$
 
-We do not reject $H_0$.
+We do not reject $H_0$. It is plausible that the two groups (A and B) have the same true RPS.
 
 ### Is the normal approximation good enough?
 
-The central limit theorem makes a sample mean approximately normal once $n$ is large, and how large depends on how skewed the data are. Revenue per session is very skewed: its skewness in group A is 14.7, against 0 for a symmetric distribution. The figure resamples group A's sessions to show two statistics at three sample sizes. The top row is the mean of one group, standardized with its estimated standard error. The bottom row is the test's $z$ for two groups drawn from the same sessions, so that $H_0$ is true.
+The central limit theorem makes a sample mean approximately normal once $n$ is large, and how large depends on how skewed the data are. Revenue per session $X_i$ is very skewed: its skewness in group A is 14.7, against 0 for a symmetric distribution. 
 
-![Six histograms in two rows, each with a standard normal curve drawn over it. Top row, the standardized mean of one group: with 500 sessions 10.6% of values fall below minus 1.96 and 0.3% above 1.96; with 5,000 sessions 4.5% and 1.2%; with 250,115 sessions 2.6% and 2.4%. Bottom row, the z statistic for two groups with no true difference: 2.2% and 2.2% with 500 sessions per group, 2.4% and 2.5% with 5,000, 2.4% and 2.4% with 250,115.](clt-check.svg)
+Because the data are simulated, we can check this in a way that real data would not allow: draw fresh groups of sessions from the underlying data generating distribution, as many times as we like, and see how the statistics vary from one draw to the next. For a group size $n$:
 
-A normal distribution puts 2.5% in each tail. The mean of one group is far from that with 500 sessions and close with 250,000. Its lower tail is the heavy one because a sample that happens to contain no large orders has both a low mean and a low estimated standard error. For a single mean, Kohavi et al. (2014) give a rule of thumb: with at least $355\gamma^2$ observations, where $\gamma$ is the skewness, both tail probabilities stay between 2% and 3%. Here that is $355 \times 14.7^2 \approx 77{,}000$ sessions.
+1. Draw a group of $n$ sessions from the distribution that generated group A. Compute its standardized mean $(\bar X - \mu)/(s/\sqrt{n})$, where $\bar X$ and $s$ are the group's sample mean and standard deviation and $\mu$ is the true mean of the distribution.
+2. Draw a second group of $n$ sessions from the same distribution and compute the test statistic $z$ for the pair. The two groups have the same true mean, so $H_0$ is true.
 
-The test needs far less. With equal group sizes and no true difference, swapping the labels of the two groups flips the sign of $z$, so its distribution is symmetric at any sample size, and the skew of one mean cancels the skew of the other. Even 500 sessions per group put about 2.2% in each tail. The cancellation depends on the even split. With a 90/10 split there is almost none, and the small group has to meet the single-mean rule.
+Repeating both steps 20,000 times gives 20,000 values of each statistic. The figure below shows their histograms for three values of $n$, with the standardized mean in the top row and $z$ in the bottom row. Where the normal approximation is good, a histogram matches the standard normal curve drawn over it.
 
-A rank test such as Mann-Whitney is sometimes proposed for skewed revenue. It tests whether sessions in one group tend to rank above sessions in the other, which is a different hypothesis. The store is paid in means: revenue is RPS times the number of sessions.
+![Six histograms in two rows, each with a standard normal curve drawn over it. Top row, the standardized mean of one group: with 50 sessions 34.6% of values fall below minus 1.96 and 0.0% above 1.96; with 500 sessions 11.2% and 0.3%; with 5,000 sessions 4.8% and 1.1%. Bottom row, the z statistic for two groups with no true difference: 0.4% and 0.3% with 50 sessions per group, where the histogram has spikes at minus 1 and plus 1; 2.2% and 2.3% with 500; 2.6% and 2.4% with 5,000.](clt-check.svg)
 
-## What the test says
+For a single mean, Kohavi et al. (2014) give a rule of thumb: with at least $355\gamma^2$ observations, where $\gamma$ is the skewness, both tail probabilities stay between 2% and 3%. Here that is $355 \times 14.7^2 \approx 77{,}000$ sessions. Group A has 250,115 sessions collected, which is more than enough.
+
+> A rank test such as Mann-Whitney is sometimes proposed for skewed revenue. It tests whether sessions in one group tend to rank above sessions in the other, which is a different hypothesis.
+
+## Is the redesign better?
 
 | KPI | $\hat\Delta$ | 95% CI for $\mu_B - \mu_A$ | $z$ | $p$ |
 | :--- | ---: | :---: | ---: | ---: |
 | CR | 0.128 pp | 0.032 pp to 0.223 pp | 2.62 | 0.009 |
-| RPS | $\\$0.103$ | $-\\$0.032$ to $\\$0.237$ | 1.50 | 0.134 |
+| RPS | \$0.103 | −<span>$</span>0.032 to <span>$</span>0.237 | 1.50 | 0.134 |
 
 (pp stands for percentage points.) To compare the two KPIs on one scale, express each difference as a lift, $\hat L = \bar X_B / \bar X_A - 1$. Its standard error follows from the delta method:
 
@@ -122,21 +147,42 @@ $$\text{SE}(\hat L) \approx \frac{\bar X_B}{\bar X_A}\sqrt{\frac{s_A^2}{n_A \bar
 
 ![Estimated lift of B over A with its 95% confidence interval. Conversion rate: plus 4.2%, interval from plus 1.0% to plus 7.5%. Revenue per session: plus 3.4%, interval from minus 1.1% to plus 7.9%. A dashed line marks the true lift of 5%, which both intervals contain.](lift-intervals.svg)
 
-The redesign converts more sessions. For revenue the test is inconclusive: the interval contains zero, and it also contains lifts larger than anything in the CR interval. Failing to reject $H_0$ leaves both possibilities open.
+The redesign converts more sessions. For revenue the test is inconclusive: the interval contains zero.
 
-The RPS interval is wider because RPS carries two sources of noise. It inherits the uncertainty in whether a session buys, which is all that CR has, and adds the uncertainty in how much a buyer spends. Relative to the mean, the standard error of $\hat\Delta$ is 1.6% for CR and 2.3% for RPS.
+The RPS lift interval is wider because RPS carries two sources of uncertainty:
 
-Since the data are simulated, we can look at the truth, marked by the dashed line. The redesign raises the conversion rate from 3.00% to 3.15% and leaves the distribution of order values unchanged, so the true lift is 5% in both KPIs. Both intervals contain it. The CR test detected the lift and the RPS test missed it.
+1. The uncertainty in whether a session will convert, which is the only uncertainty that CR has
+2. In addition, the uncertainty in how much a buyer spends.
 
-Whether two weeks would be long enough to detect a lift in RPS is a question to settle before a test starts. [Part 2](/blog/6-ab-testing-2-test-duration/) settles it for this store: a two-week test detects a 5% lift in CR about 87% of the time and a 5% lift in RPS about 58% of the time.
+You can see that the confidence interval for RPS lift is noticeably wider than the confidence interval for CR lift.
 
-## What follows from using sessions
+Since the data are simulated, we can look at the truth, marked by the dashed line. The redesign (truly) raises the conversion rate from 3.00% to 3.15% and leaves the distribution of order values unchanged, so the true lift is 5% in both KPIs. Both intervals contain it. The CR test detected the lift while the RPS test missed it.
 
-The standard errors above remain valid when one shopper contributes several sessions. They rely on each session's group being an independent coin flip, and the randomization guarantees that even when two sessions of the same shopper have similar outcomes.
+## Complexities that arise in practice
 
-What session-level randomization cannot rule out is carryover. A shopper who saw the redesign on Monday and buys on Wednesday in a session assigned to A is counted as a conversion for A. Carryover of this kind blurs the two groups, so the measured difference usually understates the difference the store would see after showing the redesign to everyone. Other kinds can work in the opposite direction, for example when the redesign only moves a purchase forward from a later session.
+### Are sessions independent?
 
+When a single shopper contributes several sessions, sessions are not independent. Some shoppers buy more often than others, so two sessions from the same shopper are correlated, no matter which group each one is routed to. However, random traffic routing picks the group (A or B) of each session without regard to other sessions, so a shopper with several sessions will usually have some in group A and some in group B. This means the variances of $\bar X_A$ and $\bar X_B$ are larger than $\sigma_A^2/n_A$ and $\sigma_B^2/n_B$, but the two sample means also move up and down together, because the same shoppers contribute to both. Under $H_0$, these two effects cancel exactly in the difference $\hat\Delta$. Its variance is still $\sigma_A^2/n_A + \sigma_B^2/n_B$, so the p-values above remain valid.
+
+### Carryover
+What session-level randomization cannot rule out is carryover. A shopper who saw the redesign on, say, Monday (meaning their session on Monday was randomly assigned to the treatment group B), but waits until Wednesday to make a purchase may get their Wednesday session assigned to the control group (group A). Here, the effect of the redesign was "felt" by the shopper in their Monday session, but their actual purchase two days later gives a conversion credit to the control group (the existing design). In this scenario, the control group is wrongly credited for a conversion caused by the treatment group from an earlier session tied to the same user. This is what we call the carryover effect (aka temporal spillover). Carryover of this kind can result in the treatment group's performance being overly pessimistic.
+
+### Peeking
 The p-values also assume that the two-week duration was fixed before the test began. Checking the results every day and stopping when $p$ dips below 0.05 rejects a true $H_0$ far more often than 5% of the time. Part 2 quantifies this.
+
+See the following classic blog post by Evan Miller for a more detailed read on this topic: [How not to run an A/B test](https://www.evanmiller.org/how-not-to-run-an-ab-test.html)
+
+## Conclusion
+
+We started this post by asking whether a website redesign improves our KPI of interest. The steps we followed to answer this question applies to any A/B test with two groups and a KPI that takes the form of a mean over sessions:
+
+1. Check that traffic was split randomly as planned (no sample ratio mismatch).
+2. Write the KPI as the mean of a per session random variable, as we did for CR and RPS.
+3. Compute $\hat\Delta$, its standard error (with a separate variance for each group), $z$ and the p-value. Reject $H_0$ if $p \lt \alpha$.
+4. For a skewed KPI such as RPS, check that each group has enough sessions for the normal approximation to hold.
+5. Report the confidence interval as well as the p-value. If the interval contains zero, the test is inconclusive: it remains plausible that the change did nothing to move our desired KPI and there is no significant evidence that the change moved the target KPI.
+
+Carryover between a shopper's sessions can bias the comparison, and the p-values assume that the test's duration was fixed before it began. How to choose that duration is the subject of [part 2](/blog/6-ab-testing-2-test-duration/).
 
 ## Code
 

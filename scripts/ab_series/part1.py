@@ -129,12 +129,12 @@ def fig_null_distribution() -> None:
     save(fig, 1, "null-distribution")
 
 
-def resample_means(rng, orders, share, n, reps=20_000, chunk=2_000):
-    """Sample mean and its estimated standard error for `reps` resamples of n sessions."""
+def simulated_means(rng, n, p=P_CONTROL, reps=20_000, chunk=2_000):
+    """Sample mean and its estimated standard error for `reps` fresh groups of n sessions."""
     means, ses = [], []
     for _ in range(reps // chunk):
-        counts = rng.binomial(n, share, chunk)
-        draws = np.r_[rng.choice(orders, counts.sum()), 0.0]
+        counts = rng.binomial(n, p, chunk)
+        draws = np.r_[order_values(rng, counts.sum()), 0.0]
         starts = np.r_[0, np.cumsum(counts)[:-1]]
         total, squares = np.add.reduceat(draws, starts), np.add.reduceat(draws**2, starts)
         total[counts == 0] = squares[counts == 0] = 0.0
@@ -145,33 +145,38 @@ def resample_means(rng, orders, share, n, reps=20_000, chunk=2_000):
 
 
 def fig_clt_check() -> None:
-    """Null distribution of two statistics, by resampling group A's sessions."""
+    """Null distribution of two statistics, over fresh groups drawn from group A's true distribution."""
     rng = np.random.default_rng(1)
-    orders, share, mean = rev_a[conv_a], conv_a.mean(), rev_a.mean()
-    sizes = (500, 5_000, n_a)
+    mean = rps_moments(P_CONTROL)[0]
+    sizes = (50, 500, 5_000)
     fig, axes = plt.subplots(2, 3, figsize=(7.2, 4.7), sharex=True, sharey=True, gridspec_kw={"wspace": 0.1, "hspace": 0.32})
     xs = np.linspace(-4, 4, 401)
-    bins = np.linspace(-4, 4, 41)
-    for col, n in enumerate(sizes):
-        m1, se1 = resample_means(rng, orders, share, n)
-        m2, se2 = resample_means(rng, orders, share, n)
+    bins = np.arange(-4.1, 4.11, 0.2)  # centred on multiples of 0.2, so the spikes at +-1 for n = 50 fall inside a bin
+    for col, n in enumerate(sizes + (n_a,)):  # the test's own size is printed for the text, not drawn
+        m1, se1 = simulated_means(rng, n)
+        m2, se2 = simulated_means(rng, n)
         with np.errstate(divide="ignore", invalid="ignore"):
+            # A group with no orders has mean 0 and standard error 0: its standardized mean counts as
+            # below -1.96, and z for two such groups is undefined (nan), which counts in neither tail.
             one_group = np.where(se1 > 0, (m1 - mean) / se1, -np.inf)
             two_groups = (m2 - m1) / np.sqrt(se1**2 + se2**2)
         for row, (z, label) in enumerate(((one_group, "one group"), (two_groups, "two groups"))):
-            ax = axes[row, col]
-            ax.hist(z, bins=bins, weights=np.full(z.size, 1 / (z.size * (bins[1] - bins[0]))), color=ORANGE_TINT, edgecolor="white", linewidth=0.5)
-            ax.plot(xs, stats.norm.pdf(xs), color=INK, linewidth=1.4)
             lower, upper = np.mean(z < -1.96), np.mean(z > 1.96)
-            ax.text(-3.9, 0.37, f"{lower:.1%}\nbelow −1.96", va="bottom", color=INK2, fontsize=9)
-            ax.text(3.9, 0.37, f"{upper:.1%}\nabove 1.96", va="bottom", ha="right", color=INK2, fontsize=9)
+            print(f"clt n={n} {label}: below {lower:.4f}, above {upper:.4f}, no orders {np.mean(~np.isfinite(z)):.4f}")
+            if col == len(sizes):
+                continue
+            ax = axes[row, col]
+            shown = z[np.isfinite(z)]
+            ax.hist(shown, bins=bins, weights=np.full(shown.size, 1 / (z.size * 0.2)), color=ORANGE_TINT, edgecolor="white", linewidth=0.5)
+            ax.plot(xs, stats.norm.pdf(xs), color=INK, linewidth=1.4)
+            ax.text(-3.9, 0.47, f"{lower:.1%}\n< −1.96", va="bottom", color=INK2, fontsize=9)
+            ax.text(3.9, 0.47, f"{upper:.1%}\n> 1.96", va="bottom", ha="right", color=INK2, fontsize=9)
             ax.set_xlim(-4, 4)
             ax.set_xticks([-2, 0, 2], ["−2", "0", "2"])
-            ax.set_ylim(0, 0.52)
+            ax.set_ylim(0, 0.66)  # the spikes at +-1 for n = 50 reach 0.59
             ax.set_yticks([])
             ax.spines["left"].set_visible(False)
-            print(f"clt n={n} {label}: below {lower:.4f}, above {upper:.4f}")
-        axes[0, col].set_title(f"{n:,} sessions", loc="center", fontweight="normal")
+            axes[0, col].set_title(f"{n:,} sessions", loc="center", fontweight="normal")
     axes[0, 0].set_ylabel("One group's mean", color=INK)
     axes[1, 0].set_ylabel("z for two groups", color=INK)
     axes[1, 1].set_xlabel("Standardized value")
