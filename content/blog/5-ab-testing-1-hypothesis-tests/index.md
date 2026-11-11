@@ -174,7 +174,7 @@ See the following classic blog post by Evan Miller for a more detailed read on t
 
 ## Conclusion
 
-We started this post by asking whether a website redesign improves our KPI of interest. The steps we followed to answer this question applies to any A/B test with two groups and a KPI that takes the form of a mean over sessions:
+We started this post by asking whether a website redesign improves our KPI of interest. The steps we followed to answer this question apply to any A/B test with two groups and a KPI that takes the form of a mean over sessions:
 
 1. Check that traffic was split randomly as planned (no sample ratio mismatch).
 2. Write the KPI as the mean of a per session random variable, as we did for CR and RPS.
